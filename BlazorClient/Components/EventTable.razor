@@ -1,0 +1,32 @@
+﻿@using API.Models
+
+<div class="bg-light m-3 p-3">
+    <h2>@Login</h2>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Date</th>
+                <th scope="col">Event</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var message in Messages)
+            {
+                <tr>
+                    <td>@message.Date</td>
+                    <td>@message.Event</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    
+    [Parameter]
+    public string Login { get; set; }
+
+    [Parameter]
+    public List<EventMessage> Messages { get; set; }
+}

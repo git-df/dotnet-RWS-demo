@@ -1,0 +1,60 @@
+﻿@page "/"
+@using API.Interfaces
+@using API.Models
+@using BlazorClient.Components
+@using Microsoft.AspNetCore.SignalR.Client
+
+<PageTitle>Home</PageTitle>
+<div class="row">
+    <div class="col-8">
+        <input class="form-control" type="text" @bind-value="@NewLogin"></input>
+    </div>
+    <button class="col btn btn-primary" @onclick="@(() => AddNewLogin())">Add login</button>
+</div>
+
+@foreach (var login in _loginsMessages.Keys)
+{
+    <EventTable Login="@login" Messages="@_loginsMessages[login]"></EventTable>
+}
+
+@code {
+    public string NewLogin { get; set; }
+
+    private HubConnection _hubConnection;
+
+    private readonly Dictionary<string, List<EventMessage>> _loginsMessages = new();
+
+    public async Task AddNewLogin()
+    {
+        if (!string.IsNullOrEmpty(NewLogin) && !_loginsMessages.Keys.Contains(NewLogin))
+        {
+            await _hubConnection.SendAsync(nameof(IEventsClient.JoinLogin), NewLogin.ToUpper());
+            _loginsMessages.Add(NewLogin.ToUpper(), new List<EventMessage>());
+            NewLogin = string.Empty;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _hubConnection = new HubConnectionBuilder()
+            .WithUrl(IEventsClient.Url)
+            .Build();
+
+        _hubConnection.On<EventMessage>(nameof(IEventsClient.ReceiveEvents), message =>
+        {
+            _loginsMessages[message.Login].Add(message);
+
+            InvokeAsync(StateHasChanged);
+        });
+
+        await _hubConnection.StartAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_hubConnection is not null)
+        {
+            await _hubConnection.DisposeAsync();
+        }
+    }
+}

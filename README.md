@@ -1,1 +1,1 @@
-# dotnet-RWS-demo
+# RabbitMQ with SignalR
